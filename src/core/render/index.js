@@ -1,6 +1,5 @@
 /* eslint-disable no-unused-vars */
 import tinydate from 'tinydate';
-import DOMPurify from 'dompurify';
 import * as dom from '../util/dom';
 import cssVars from '../util/polyfill/css-vars';
 import { getAndActive, sticky } from '../event/sidebar';
@@ -261,7 +260,9 @@ export function Render(Base) {
         [
           document.querySelector('aside.sidebar'),
           document.querySelector('button.sidebar-toggle'),
-        ].forEach(node => node.parentNode.removeChild(node));
+        ]
+          .filter(e => !!e)
+          .forEach(node => node.parentNode.removeChild(node));
         document.querySelector('section.content').style.right = 'unset';
         document.querySelector('section.content').style.left = 'unset';
         document.querySelector('section.content').style.position = 'relative';
@@ -322,15 +323,15 @@ export function Render(Base) {
             );
           }
 
-          this.callHook('afterEach', html, hookData =>
-            renderMain.call(this, hookData)
-          );
+          this.callHook('afterEach', html, hookData => {
+            renderMain.call(this, hookData);
+            next();
+          });
         };
 
         if (this.isHTML) {
           html = this.result = text;
           callback();
-          next();
         } else {
           prerenderEmbed(
             {
@@ -339,11 +340,7 @@ export function Render(Base) {
             },
             tokens => {
               html = this.compiler.compile(tokens);
-              html = this.isRemoteUrl
-                ? DOMPurify.sanitize(html, { ADD_TAGS: ['script'] })
-                : html;
               callback();
-              next();
             }
           );
         }
@@ -418,7 +415,7 @@ export function Render(Base) {
 
       if (el) {
         if (config.repo) {
-          html += tpl.corner(config.repo, config.cornerExternalLinkTarge);
+          html += tpl.corner(config.repo, config.cornerExternalLinkTarget);
         }
 
         if (config.coverpage) {
